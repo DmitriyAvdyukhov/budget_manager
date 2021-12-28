@@ -26,18 +26,17 @@ private:
 
 class QueryModification : public Query
 {
-public:
-	inline static const double TAX = 0.87;
+public:	
 	QueryModification(Date from, Date to, BudgetManager& manager, double amount = 0.)
 		: Query(from, to)
 		, manager_(manager)
 		, amount_(amount)
-			{}
+	{}
 
 	void CreateBudget()
 	{
 		int count_day = Date::ComputeDistance(GetFrom(), GetTo());
-		double amount_day = amount_ / (++count_day);
+		const double amount_day = amount_ / (++count_day);
 		auto start = Date::ComputeDistance(BudgetManager::START_DATE, GetFrom());
 		auto end = Date::ComputeDistance(BudgetManager::START_DATE, GetTo());		
 		for (; start <= end; ++start)
@@ -48,25 +47,26 @@ public:
 	}	
 
 	void PayTax()
-	{		
-		const double hundred = 100.;
+	{	
+		const double bid_of_tax = 1 - amount_ / 100;
 		auto start = Date::ComputeDistance(BudgetManager::START_DATE, GetFrom());
 		auto end = Date::ComputeDistance(BudgetManager::START_DATE, GetTo());
+
 		for (; start <= end; ++start)
 		{	
-			manager_.GetBudget()[start].income *=  1 - amount_ / hundred;			
+			manager_.AddPayTax(start, bid_of_tax);
 		}		
 	}
 
 	void Spend()
 	{
 		int count_day = Date::ComputeDistance(GetFrom(), GetTo());
-		double amount_day = amount_ / (++count_day);
+		const double spending_day = amount_ / (++count_day);
 		auto start = Date::ComputeDistance(BudgetManager::START_DATE, GetFrom());
 		auto end = Date::ComputeDistance(BudgetManager::START_DATE, GetTo());
 		for (; start <= end; ++start)
 		{
-			manager_.GetBudget()[start].speding += amount_day;
+			manager_.AddSpending(start, spending_day);
 		}
 	}
 
@@ -88,7 +88,7 @@ public:
 		for (; start <= end; ++start)
 		{			
 			all_sum += manager.GetBudget()[start].income;
-			all_sum -= manager.GetBudget()[start].speding;
+			all_sum -= manager.GetBudget()[start].spending;
 		}
 		return all_sum ;
 	}

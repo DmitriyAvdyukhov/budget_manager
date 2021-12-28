@@ -9,7 +9,7 @@
 struct DayInfo
 {   
     double income = 0.;
-    double speding = 0.;
+    double spending = 0.;
 };
 
 class BudgetManager
@@ -23,15 +23,25 @@ public:
         budget_.resize(Date::ComputeDistance(START_DATE, END_DATE));
     }
 
-    void AddBudget(int pos, double sum)
+    void AddBudget(int pos_day, double income)
     {       
-        budget_[pos].income += sum;
-    }    
+        budget_[pos_day].income += income;
+    }   
 
-     std::vector<DayInfo>& GetBudget()
-     {
-         return budget_;
-     }
+    void AddSpending(int pos_day, double spending)
+    {
+        budget_[pos_day].spending += spending;
+    }
+
+    void AddPayTax(int pos_day, double bid_of_tax)
+    {
+        budget_[pos_day].income *= bid_of_tax;
+    }
+
+    const std::vector<DayInfo>& GetBudget()const
+    {
+        return budget_;
+    }
 
 private:    
     std::vector<DayInfo>budget_;

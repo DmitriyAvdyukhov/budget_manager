@@ -6,60 +6,66 @@
 #include <string_view>
 #include <fstream>
 #include <tuple>
+#include <optional>
 
 using namespace std;
-struct Dates
-{
-    Date from;
-    Date to;
-};
 
-std::tuple<std::string_view, uint8_t> SplitWord(std::string_view line, uint8_t pos = 0)
+
+std::tuple<std::string_view, std::optional<std::string_view>> SplitWord(std::string_view line, uint8_t pos = 0)
 {   
     auto pos_second = line.find(' ', pos);
     std::string_view result = line.substr(pos, pos_second - pos);
-   
-    return { result, pos_second + 1 };
+    if (pos_second == string::npos)
+    {
+        return { result, {} };
+    }    
+    return { result, line.substr(pos_second + 1) };
 }
 
-std::tuple<Dates, uint8_t> GetDates(std::string_view line, uint8_t pos)
+std::vector<std::string_view> SplitWords(std::string_view line)
 {
-    auto [date_from, pos_d1] = SplitWord(line, pos);
-    auto [date_to, pos_d2] = SplitWord(line, pos_d1);
-    return { {Date::FromString(date_from), Date::FromString(date_to)}, pos_d2 };
+    std::vector<std::string_view> result;
+    while (true)
+    {
+        auto [query, other_words] = SplitWord(line);
+        result.push_back(query);
+        if (!other_words)
+        {
+            return result;
+        }
+        line = *other_words;
+    }
 }
 
 void ParseAndProcessQuery(BudgetManager& manager, string_view line)
 {       
-    auto [word, pos] = SplitWord(line);
-    if (word == "Earn")
+    auto [command, queries] = SplitWord(line);
+   
+    if (command == "Earn")
     {
-        auto [dates, pos_finish] = GetDates(line, pos);
-        auto [sum_str, pos_end] = SplitWord(line, pos_finish);
-        double sum = std::stod(std::string(sum_str));
-        QueryModification qm(dates.from, dates.to, manager, sum);
+        std::vector<std::string_view> query = SplitWords(*queries);          
+        QueryModification qm(Date::FromString(query[0]), Date::FromString(query[1])
+            , manager, std::stod(std::string(query[2])));
         qm.CreateBudget();
     }
-    else if (word == "ComputeIncome")
+    else if (command == "ComputeIncome")
     {
-        auto[dates, pos_finish] = GetDates(line, pos);
-        ComputeIncome ci(dates.from, dates.to);
+        std::vector<std::string_view> query = SplitWords(*queries);
+        ComputeIncome ci(Date::FromString(query[0]), Date::FromString(query[1]));
         std::cout << ci.ComputeAndPrint(manager) << std::endl;
     }
-    else if (word == "PayTax")
+    else if (command == "PayTax")
     {
-        auto [dates, pos_finish] = GetDates(line, pos);
-        auto [sum_str, pos_end] = SplitWord(line, pos_finish);
-        int tax = std::stoi(std::string(sum_str));
-        QueryModification qm(dates.from, dates.to, manager, tax);
+        std::vector<std::string_view> query = SplitWords(*queries);      
+        QueryModification qm(Date::FromString(query[0]), Date::FromString(query[1])
+            , manager, std::stoi(std::string(query[2])));
         qm.PayTax();
     }
-    else if (word == "Spend")
+    else if (command == "Spend")
     {
-        auto [dates, pos_finish] = GetDates(line, pos);
-        auto [sum_str, pos_end] = SplitWord(line, pos_finish);
-        double sum = std::stod(std::string(sum_str));
-        QueryModification qm(dates.from, dates.to, manager, sum);
+        std::vector<std::string_view> query = SplitWords(*queries);
+        QueryModification qm(Date::FromString(query[0]), Date::FromString(query[1])
+            , manager, std::stoi(std::string(query[2])));
         qm.Spend();
     }
     else
