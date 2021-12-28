@@ -4,6 +4,8 @@
 #include <string>
 #include <string_view>
 
+
+
 class Date
 {
 public:
@@ -53,6 +55,21 @@ public:
         return static_cast<int>((date_to_seconds(to) - date_to_seconds(from)) / SECONDS_IN_DAY);
     }
 
+     int GetYear()const
+    {
+        return year_;
+    }
+     int GetMonth()const
+    {
+        return month_;
+    }
+     int GetDay()const
+    {
+        return day_;
+    }
+
+   
 private:
     int year_ = 0, month_ = 0, day_ = 0;
 };
+
